@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Clinic</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="background">
+        <div class="content" id="welcomeContent">
+            <h1>Welcome to Virtual Clinic</h1>
+            <h2>We're here to provide you with the best care and comfort.</h2>
+            <h3>Get your <i>Disease</i> predicted in <i>Seconds</i> clicking this button</h3>
+            <button class="bubble-btn" id="startConsultationBtn">Start Consultation</button>
+        </div>
+
+        <div class="container" id="symptomsContainer" style="display: none;">
+            <h1 id="what">What are the symptoms that you are facing??</h1>
+            <form action="#" method="post" id="symptomsForm">
+                <div class="symptomInput"><b>
+                    <label for="symptom1">Symptom 1:</label></b>
+                    <select name="symptom1" class="symptomSelect">
+                        <option value="">Select a symptom...</option>
+                        <option value="headache">Headache</option>
+                        <option value="fever">Fever</option>
+                        <option value="cough">Cough</option>
+                        <option value="sore-throat">Sore Throat</option>
+                        <option value="fatigue">Fatigue</option>
+                        <option value="nausea">Nausea</option>
+                        <!-- Add more options as needed -->
+                    </select>
+                </div>
+                <button type="button" id="addSymptom">Add Another Symptom</button>
+                <br>
+                <input class="bubble-btn" style="margin-top: 10px;" type="submit" value="Submit">
+
+            </form>
+        </div>
+
+        <div id="outputContainer" style="display: none;">
+            <div class="outputBox">
+                <p>The disease that you might have is <span id="diseaseOutput"></span></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const addSymptomBtn = document.getElementById("addSymptom");
+            const startConsultationBtn = document.getElementById("startConsultationBtn");
+            const welcomeContent = document.getElementById("welcomeContent");
+            const symptomsContainer = document.getElementById("symptomsContainer");
+            const symptomsForm = document.getElementById("symptomsForm");
+            let symptomCount = 1;
+            const maxSymptoms = 18;
+
+            addSymptomBtn.addEventListener("click", function() {
+                if (symptomCount < maxSymptoms) {
+                    symptomCount++;
+                    const newSymptomInput = document.createElement("div");
+                    newSymptomInput.classList.add("symptomInput");
+                    newSymptomInput.innerHTML = `<b>
+                        <label for="symptom${symptomCount}">Symptom ${symptomCount}:</label></b>
+                        <select name="symptom${symptomCount}" class="symptomSelect">
+                            <option value="">Select a symptom...</option>
+                            <option value="headache">Headache</option>
+                            <option value="fever">Fever</option>
+                            <option value="cough">Cough</option>
+                            <option value="sore-throat">Sore Throat</option>
+                            <option value="fatigue">Fatigue</option>
+                            <option value="nausea">Nausea</option>
+                            <!-- Add more options as needed -->
+                        </select>
+                    `;
+                    // Insert new input above the buttons
+                    symptomsForm.insertBefore(newSymptomInput, addSymptomBtn);
+                } else {
+                    alert("You have reached the maximum limit of symptoms.");
+                }
+            });
+
+            startConsultationBtn.addEventListener("click", function() {
+                welcomeContent.style.display = "none";
+                symptomsContainer.style.display = "block";
+            });
+
+            // Modify the form submission to submit data to the Python script
+            symptomsForm.addEventListener("submit", function(event) {
+                event.preventDefault();  // Prevent default form submission
+                
+                // Gather symptoms data from the form
+                const formData = new FormData(symptomsForm);
+                const symptoms = Array.from(formData.values());
+                
+                // Send symptoms data to the Python script using fetch API
+                fetch("predict_disease.py", {
+                    method: "POST",
+                    body: JSON.stringify({ symptoms: symptoms }),
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                })
+                .then(response => response.text())
+                .then(data => {
+                    // Display the output in the output box
+                    const diseaseOutput = document.getElementById("diseaseOutput");
+                    diseaseOutput.textContent = data;
+                    
+                    // Hide the symptoms container and show the output container
+                    symptomsContainer.style.display = "none";
+                    outputContainer.style.display = "block";
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                });
+            });
+
+            const symptomSelects = document.querySelectorAll(".symptomSelect");
+            symptomSelects.forEach(select => {
+                select.addEventListener("input", function(event) {
+                    const key = event.target.value.charAt(0).toLowerCase();
+                    const dropdown = event.target;
+                    const options = dropdown.options;
+                    const startIndex = dropdown.selectedIndex;
+                    
+                    for (let i = startIndex + 1; i < options.length; i++) {
+                        const option = options[i];
+                        const firstLetter = option.text.charAt(0).toLowerCase();
+                        if (firstLetter === key) {
+                            dropdown.selectedIndex = i;
+                            break;
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
