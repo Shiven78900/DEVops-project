@@ -52,6 +52,7 @@
             const welcomeContent = document.getElementById("welcomeContent");
             const symptomsContainer = document.getElementById("symptomsContainer");
             const symptomsForm = document.getElementById("symptomsForm");
+            const outputContainer = document.getElementById("outputContainer");
             let symptomCount = 1;
             const maxSymptoms = 18;
 
@@ -71,8 +72,7 @@
                             <option value="fatigue">Fatigue</option>
                             <option value="nausea">Nausea</option>
                             <!-- Add more options as needed -->
-                        </select>
-                    `;
+                        </select>`;
                     // Insert new input above the buttons
                     symptomsForm.insertBefore(newSymptomInput, addSymptomBtn);
                 } else {
@@ -101,18 +101,21 @@
                         "Content-Type": "application/json"
                     }
                 })
-                .then(response => response.text())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.text();
+                })
                 .then(data => {
-                    // Display the output in the output box
                     const diseaseOutput = document.getElementById("diseaseOutput");
                     diseaseOutput.textContent = data;
-                    
-                    // Hide the symptoms container and show the output container
                     symptomsContainer.style.display = "none";
                     outputContainer.style.display = "block";
                 })
                 .catch(error => {
                     console.error("Error:", error);
+                    alert("An error occurred while predicting the disease. Please try again.");
                 });
             });
 
